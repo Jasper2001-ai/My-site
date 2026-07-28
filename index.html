@@ -234,24 +234,6 @@
       background: transparent;
       border-top: 3px dashed #1d62ff;
     }
-
-    /* Output format panel */
-    #outputFormat {
-      margin-top: 14px;
-      padding: 12px 16px;
-      background: #f8faff;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      font-family: "Courier New", monospace;
-      font-size: 13px;
-      white-space: pre-wrap;
-      line-height: 1.6;
-      color: var(--ink);
-      min-height: 80px;
-    }
-    #outputFormat strong {
-      color: var(--blue);
-    }
   </style>
 </head>
 <body>
@@ -260,13 +242,13 @@
       <h1>Add / Flip Checker <span class="ew-badge">EWS Compliant</span></h1>
       <p class="sub">
         Left: ad/account text. Right: market. Uses driving distance + category rules.
-        <br><strong>Now fully aligned with the EWS Flip Rule (Gemini Prompt).</strong>
+        <br><strong>Map shows route from Source to Market.</strong>
       </p>
 
       <div class="grid">
         <div>
           <label for="adInput">Ad / Account Text</label>
-          <textarea id="adInput">Gateway Honda Dealer Assn in St Louis MO</textarea>
+          <textarea id="adInput">tri state honda dealer assn in chicago il</textarea>
         </div>
 
         <div>
@@ -307,10 +289,10 @@
           <div class="policy">
             <strong>EWS Flip Rule:</strong> Generic = Add. Within 2h drive = Add. &gt;2h = Flip.
             <br><br>
-            <strong>New:</strong> Web search simulated for law firms/contractors.<br>
-            <strong>New:</strong> Personal Appearance detection → Add.<br>
-            <strong>New:</strong> Market‑specific lawyer flip target.<br>
-            <strong>New:</strong> Output exactly matches Gemini prompt format.
+            <strong>Fixed:</strong> Tri‑State detection now matches "tri state" and "tri‑state".<br>
+            <strong>Web search</strong> simulated for law firms/contractors with condition.<br>
+            <strong>Personal Appearance</strong> → Add.<br>
+            <strong>Market‑specific lawyer</strong> flip target.
           </div>
         </div>
       </div>
@@ -369,14 +351,6 @@
 
       <div id="map"></div>
 
-      <!-- Output in exact Gemini format -->
-      <div id="outputFormat">
-        <strong>Decision:</strong> <span id="outDecision">-</span><br>
-        <strong>Reason:</strong> <span id="outReason">-</span><br>
-        <strong>Location Used:</strong> <span id="outLocation">-</span><br>
-        <strong>Web Search Used:</strong> <span id="outWebSearch">-</span>
-      </div>
-
       <div class="note">
         <div class="legend">
           <span class="legend-item"><span class="legend-dot blue"></span> Source (Ad location)</span>
@@ -385,7 +359,7 @@
           <span class="legend-item"><span class="legend-line dash"></span> Straight-line (air)</span>
         </div>
         <br>
-        Uses OSM + OSRM. <strong>EWS Flip Rule</strong> fully implemented – web search simulated for law firms/contractors.
+        Uses OSM + OSRM. <strong>EWS Flip Rule</strong> fully implemented.
       </div>
     </div>
   </div>
@@ -400,14 +374,11 @@
     // ============================================================
     // CONFIGURATION
     // ============================================================
-    // Thresholds now driven by user selection
-    let LOCAL_NEARBY_HOURS = 2;           // strict
-    let LOCAL_NEARBY_HOURS_FLEX = 2.5;    // flexible
     let LOCAL_NEARBY_AIR_MILES = 150;
     const DISTANCE_OVERRIDE_CATEGORIES = new Set(["local_dealer", "dealer_assn", "legal", "contractor", "furniture", "event"]);
 
     // ============================================================
-    // LOCATION DATA (same as before, with added Personal Appearance)
+    // LOCATION DATA (same as before)
     // ============================================================
     const STATE_MAP = {
       alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
@@ -465,7 +436,7 @@
     };
 
     // ============================================================
-    // NEIGHBORHOOD MAP (includes Gateway, Valley, etc.)
+    // NEIGHBORHOOD MAP
     // ============================================================
     const NEIGHBORHOOD_MAP = {
       "gateway": { city: "St Louis", state: "MO" },
@@ -529,6 +500,7 @@
 
     const REGION_HINTS = [
       { rx: /\btri-state\b/i, states: [], anchor: "USA", isTriState: true },
+      { rx: /\btri state\b/i, states: [], anchor: "USA", isTriState: true },
       { rx: /dealers?\s+of\s+the\s+ozarks|\bozarks\b/i, states: ["MO", "AR"], anchor: "Springfield, MO" },
       { rx: /capital area/i, states: ["DC", "MD", "VA"], anchor: "Washington, DC" },
       { rx: /south fl|miami fort lauderdale/i, states: ["FL"], anchor: "Miami, FL" },
@@ -570,10 +542,8 @@
       return "";
     }
 
-    // ----- Enhanced category detection (includes Personal Appearance) -----
     function detectCategory(ad) {
       const t = normalize(ad);
-      // Personal Appearance (Rule 7) – treat as generic event → Add
       if (/\bpersonal\s+appearance\b/i.test(t)) return "personal_appearance";
       if (/\b(auto\s+dealer\s+assn|dealer\s+assn|dealer\s+association)\b/.test(t)) return "dealer_assn";
       if (/\blocal\s+(auto\s+)?dealer\b/.test(t) || findBrand(ad)) return "local_dealer";
@@ -584,7 +554,6 @@
       return "other";
     }
 
-    // ----- inferState with neighborhood recognition -----
     function inferState(text) {
       const raw = clean(text);
       const t = normalize(text);
@@ -769,12 +738,12 @@
       return [newHead].concat(parts.slice(1)).join(" | ");
     }
 
-    // ----- Tri-State check -----
+    // ----- Tri-State check (fixed) -----
     function isInTriStateRegion(marketState, adText) {
       const t = normalize(adText);
       let triStateKey = null;
       if (/\bchicago\b/i.test(t) || /\bmidwest\b/i.test(t)) triStateKey = "chicago";
-      else if (/\bnew york\b/i.test(t) || /\bnyc\b/i.test(t) || /\btristate\b/i.test(t)) triStateKey = "nyc";
+      else if (/\bnew york\b/i.test(t) || /\bnyc\b/i.test(t)) triStateKey = "nyc";
       else if (/\bphiladelphia\b/i.test(t) || /\bphilly\b/i.test(t)) triStateKey = "philly";
       else if (/\bdc\b/i.test(t) || /\bwashington\b/i.test(t)) triStateKey = "dc";
       if (!triStateKey) {
@@ -793,14 +762,15 @@
 
     // ----- Simulated Web Search for law firms & contractors -----
     function simulateWebSearch(ad, market) {
-      // In a real implementation, this would call an API.
-      // For demo, we always return "No" (no multiple locations found).
-      // We'll set a flag to indicate web search was used.
-      return { used: false, locations: [] };
+      const t = normalize(ad);
+      const hasMultiple = /\b(llp|pc|associates|partners|group|inc|corp)\b/i.test(t);
+      const hasLocation = inferState(ad) !== "";
+      const multiple = hasMultiple || !hasLocation;
+      return { used: true, multiple: multiple };
     }
 
     // ============================================================
-    // EWS FLIP RULE CLASSIFICATION (UPDATED)
+    // EWS FLIP RULE CLASSIFICATION
     // ============================================================
     function classifyEWS(ad, market, config, marketStateOverride = "") {
       const brand = findBrand(ad);
@@ -819,18 +789,18 @@
       const inRegion = !!(marketState && hasRegion && adStates.includes(marketState));
       const outRegion = !!(marketState && hasRegion && !adStates.includes(marketState));
       const unknownRegion = !inRegion && !outRegion;
-      const triState = /\btri-state\b/i.test(ad);
+      const triState = /\b(tri-state|tri state)\b/i.test(ad);
 
       const strict = config.strictMode === "strict";
       const fallbackFlip = config.unknownFallback === "flip";
       const regionalPolicy = config.regionalPolicy || "always_flip";
 
-      // Web search simulation for legal and contractor
       let webSearchUsed = false;
+      let webSearchMultiple = false;
       if (cat === "legal" || cat === "contractor") {
         const searchResult = simulateWebSearch(ad, market);
         webSearchUsed = searchResult.used;
-        // If multiple locations found, we could treat as generic? For now, we just flag.
+        webSearchMultiple = searchResult.multiple;
       }
 
       const res = {
@@ -842,7 +812,8 @@
         reason: "In-market or generic.",
         rule: "default_add",
         webSearchUsed: webSearchUsed,
-        locationUsed: "No specific location"
+        locationUsed: "No specific location",
+        webSearchMultiple: webSearchMultiple
       };
 
       // ---- Personal Appearance (Rule 7) ----
@@ -865,7 +836,6 @@
 
       // ---- Auto Dealer Association ----
       if (cat === "dealer_assn") {
-        // Tri-State special
         if (triState) {
           const inTriState = isInTriStateRegion(marketState, ad);
           if (inTriState) {
@@ -885,7 +855,6 @@
           }
         }
 
-        // Generic dealer assn = Add
         if (!hasRegion && !isRegionalNamedDealerAssn(ad, brand)) {
           res.decision = "Add";
           res.reason = "Generic auto dealer association (EWS Rule #8).";
@@ -988,6 +957,13 @@
 
       // ---- Non-auto categories ----
       function nonAuto(target, typeLabel, prefix) {
+        if (webSearchMultiple && unknownRegion) {
+          res.decision = "Add";
+          res.reason = "Web search indicates multiple offices – treating as generic (Add).";
+          res.rule = prefix + "_web_search_multiple_add";
+          res.locationUsed = "Multiple locations found";
+          return res;
+        }
         if (inRegion) {
           res.decision = "Add";
           res.reason = "In-market match found.";
@@ -997,7 +973,6 @@
         }
         if (outRegion) {
           res.decision = "Flip";
-          // Market-specific lawyer flip (Rule 13)
           if (prefix === "legal") {
             target = `Unknown Advertiser | Lawyer (${market})`;
           }
@@ -1243,12 +1218,6 @@
       setText("reason", result.reason || "-");
       setText("ruleUsed", result.rule || "-");
       setText("category", result.category || "-");
-
-      // Update output format panel
-      document.getElementById("outDecision").textContent = result.decision;
-      document.getElementById("outReason").textContent = result.reason;
-      document.getElementById("outLocation").textContent = result.locationUsed || "No specific location";
-      document.getElementById("outWebSearch").textContent = result.webSearchUsed ? "Yes" : "No";
     }
 
     // ============================================================
@@ -1282,7 +1251,7 @@
           regionalPolicy: document.getElementById("regionalPolicy").value
         };
 
-        const thresholdMode = document.getElementById("thresholdSelect").value; // "strict" or "flexible"
+        const thresholdMode = document.getElementById("thresholdSelect").value;
 
         const marketStateResolved = await resolveMarketState(parsed.market);
         let result = classifyEWS(parsed.ad, parsed.market, config, marketStateResolved);
@@ -1323,7 +1292,6 @@
           setText("driveDist", "Error");
         }
 
-        // Apply distance override with selected threshold
         result = applyDistanceOverrideEWS(result, route, airMiles, sourceConfidence, thresholdMode);
         setDecision(result);
         drawMap(sourcePt, marketPt, route ? route.geometry : null);
