@@ -176,6 +176,7 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       overflow: hidden;
+      background: #f0f4f8;
     }
 
     .note {
@@ -202,6 +203,36 @@
       border: 1px solid #ffe082;
       color: #795548;
     }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+    .legend-dot.blue { background: #1d62ff; }
+    .legend-dot.red { background: #c23a2e; }
+    .legend-line {
+      width: 24px;
+      height: 3px;
+      background: #1d62ff;
+      border-radius: 2px;
+    }
+    .legend-line.dash {
+      background: transparent;
+      border-top: 3px dashed #1d62ff;
+    }
   </style>
 </head>
 <body>
@@ -215,7 +246,7 @@
       <div class="grid">
         <div>
           <label for="adInput">Ad / Account Text</label>
-          <textarea id="adInput">Valley Honda Dealer Assn in Chicago IL</textarea>
+          <textarea id="adInput">Gateway Honda Dealer Assn in St Louis MO</textarea>
         </div>
 
         <div>
@@ -249,9 +280,7 @@
           <div class="policy">
             <strong>EWS Flip Rule:</strong> Generic = Add. Within 2hr drive = Add. &gt;2hr = Flip.
             <br><br>
-            <strong>Flexible threshold:</strong> 2hr 15min - 2hr 30min considered "near threshold" with preference for Add.
-            <br><br>
-            <strong>Updated:</strong> Neighborhood recognition + Tri-State region matching.
+            <strong>Flexible threshold:</strong> 2h 15min - 2h 30min considered "near threshold" with preference for Add.
           </div>
         </div>
       </div>
@@ -310,9 +339,14 @@
 
       <div id="map"></div>
       <div class="note">
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot blue"></span> Source (Ad location)</span>
+          <span class="legend-item"><span class="legend-dot red"></span> Market</span>
+          <span class="legend-item"><span class="legend-line"></span> Driving route</span>
+          <span class="legend-item"><span class="legend-line dash"></span> Straight-line (air)</span>
+        </div>
+        <br>
         Uses OSM + OSRM. If route unavailable, straight-line shown. <strong>EWS Flip Rule:</strong> law firms/contractors require web verification (simulated).
-        <br><br>
-        <strong>Flexible threshold:</strong> 2h 15m - 2h 30m = Add (accounts for traffic/weather). &gt; 2h 30m = Flip.
       </div>
     </div>
   </div>
@@ -324,15 +358,17 @@
   ></script>
 
   <script>
-    // ----- EWS Flip Rule implementation -----
-    const LOCAL_NEARBY_HOURS = 2;           // Base threshold: 2 hours
-    const LOCAL_NEARBY_HOURS_FLEX = 2.5;    // Flexible threshold: 2.5 hours (2h 30m)
-    const LOCAL_NEARBY_AIR_MILES = 150;     // Increased air distance buffer
-
-    // Categories that can be overridden by distance
+    // ============================================================
+    // CONFIGURATION
+    // ============================================================
+    const LOCAL_NEARBY_HOURS = 2;
+    const LOCAL_NEARBY_HOURS_FLEX = 2.5;
+    const LOCAL_NEARBY_AIR_MILES = 150;
     const DISTANCE_OVERRIDE_CATEGORIES = new Set(["local_dealer", "dealer_assn", "legal", "contractor", "furniture", "event"]);
 
-    // ----- State & City data -----
+    // ============================================================
+    // LOCATION DATA
+    // ============================================================
     const STATE_MAP = {
       alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
       colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
@@ -388,9 +424,15 @@
       "washington dc": "DC", "wilkes barre": "PA", "wilkes-barre": "PA", "youngstown": "OH"
     };
 
-    // ----- NEIGHBORHOOD MAP - local area names within cities -----
+    // ============================================================
+    // NEIGHBORHOOD MAP - CRITICAL for "Gateway", "Valley", etc.
+    // ============================================================
     const NEIGHBORHOOD_MAP = {
-      // Chicago neighborhoods
+      // St Louis
+      "gateway": { city: "St Louis", state: "MO" },
+      "the gateway": { city: "St Louis", state: "MO" },
+      
+      // Chicago
       "valley": { city: "Chicago", state: "IL" },
       "south side": { city: "Chicago", state: "IL" },
       "north side": { city: "Chicago", state: "IL" },
@@ -402,7 +444,7 @@
       "lakeview": { city: "Chicago", state: "IL" },
       "wrigleyville": { city: "Chicago", state: "IL" },
 
-      // New York City neighborhoods
+      // New York
       "manhattan": { city: "New York", state: "NY" },
       "brooklyn": { city: "Brooklyn", state: "NY" },
       "queens": { city: "Queens", state: "NY" },
@@ -410,18 +452,13 @@
       "staten island": { city: "Staten Island", state: "NY" },
       "harlem": { city: "New York", state: "NY" },
       "soho": { city: "New York", state: "NY" },
-      "tribeca": { city: "New York", state: "NY" },
-      "chelsea": { city: "New York", state: "NY" },
 
-      // Los Angeles neighborhoods
-      "south bay": { city: "Los Angeles", state: "CA" },
+      // Los Angeles
       "san fernando valley": { city: "Los Angeles", state: "CA" },
       "san gabriel valley": { city: "Los Angeles", state: "CA" },
       "hollywood": { city: "Los Angeles", state: "CA" },
       "beverly hills": { city: "Beverly Hills", state: "CA" },
       "santa monica": { city: "Santa Monica", state: "CA" },
-      "venice": { city: "Los Angeles", state: "CA" },
-      "westwood": { city: "Los Angeles", state: "CA" },
 
       // Dallas/Fort Worth
       "dfw": { city: "Dallas", state: "TX" },
@@ -430,23 +467,19 @@
 
       // Houston
       "h-town": { city: "Houston", state: "TX" },
-      "bayou city": { city: "Houston", state: "TX" },
 
       // Atlanta
       "atl": { city: "Atlanta", state: "GA" },
 
       // Miami
       "miami dade": { city: "Miami", state: "FL" },
-      "south beach": { city: "Miami Beach", state: "FL" },
 
       // San Francisco
       "sf": { city: "San Francisco", state: "CA" },
       "bay area": { city: "San Francisco", state: "CA" },
-      "east bay": { city: "Oakland", state: "CA" },
 
       // Seattle
       "puget sound": { city: "Seattle", state: "WA" },
-      "emerald city": { city: "Seattle", state: "WA" },
 
       // Denver
       "mile high": { city: "Denver", state: "CO" },
@@ -456,9 +489,6 @@
 
       // Detroit
       "motor city": { city: "Detroit", state: "MI" },
-
-      // Cleveland
-      "cle": { city: "Cleveland", state: "OH" },
 
       // Pittsburgh
       "burgh": { city: "Pittsburgh", state: "PA" },
@@ -470,7 +500,9 @@
       "beantown": { city: "Boston", state: "MA" }
     };
 
-    // ----- TRI-STATE REGIONS -----
+    // ============================================================
+    // TRI-STATE REGIONS
+    // ============================================================
     const TRI_STATE_REGIONS = {
       "nyc": { states: ["NY", "NJ", "CT"], anchor: "New York, NY" },
       "chicago": { states: ["IL", "IN", "WI"], anchor: "Chicago, IL" },
@@ -506,7 +538,9 @@
 
     let map, mapLayer;
 
-    // ----- helpers -----
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
     function escapeRegExp(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
     function clean(s) { return (s || "").replace(/\s+/g, " ").trim(); }
     function stripAddOrFlip(s) { return clean((s || "").replace(/\badd\s*or\s*f\w*.*$/i, "")); }
@@ -517,7 +551,10 @@
       }
       return t;
     }
-    function setText(id, value) { document.getElementById(id).textContent = value || "-"; }
+    function setText(id, value) { 
+      const el = document.getElementById(id);
+      if (el) el.textContent = value || "-"; 
+    }
 
     function findBrand(text) {
       const t = normalize(text);
@@ -544,7 +581,7 @@
       const t = normalize(text);
       if (!t) return "";
 
-      // Check neighborhood map first
+      // Check neighborhood map first (CRITICAL for "Gateway", "Valley", etc.)
       for (const [neighborhood, data] of Object.entries(NEIGHBORHOOD_MAP)) {
         const rx = new RegExp("\\b" + escapeRegExp(neighborhood).replace(/\s+/g, "\\s+") + "\\b", "i");
         if (rx.test(t)) return data.state;
@@ -733,13 +770,11 @@
       const t = normalize(adText);
       let triStateKey = null;
 
-      // Detect which tri-state region from ad or market
       if (/\bchicago\b/i.test(t) || /\bmidwest\b/i.test(t)) triStateKey = "chicago";
       else if (/\bnew york\b/i.test(t) || /\bnyc\b/i.test(t) || /\btristate\b/i.test(t)) triStateKey = "nyc";
       else if (/\bphiladelphia\b/i.test(t) || /\bphilly\b/i.test(t)) triStateKey = "philly";
       else if (/\bdc\b/i.test(t) || /\bwashington\b/i.test(t)) triStateKey = "dc";
 
-      // If no specific tri-state detected, check if market is in any tri-state
       if (!triStateKey) {
         for (const [key, region] of Object.entries(TRI_STATE_REGIONS)) {
           if (region.states.includes(marketState)) {
@@ -752,22 +787,21 @@
       if (triStateKey && TRI_STATE_REGIONS[triStateKey]) {
         return TRI_STATE_REGIONS[triStateKey].states.includes(marketState);
       }
-
       return false;
     }
 
-    // ----- EWS Flip Rule core classification -----
+    // ============================================================
+    // EWS FLIP RULE CLASSIFICATION
+    // ============================================================
     function classifyEWS(ad, market, config, marketStateOverride = "") {
       const brand = findBrand(ad);
       const cat = detectCategory(ad);
       const marketState = marketStateOverride || inferState(market);
       const adStates = inferAdStates(ad);
       
-      // Check if ad has neighborhood location
       const neighborhoodLoc = getNeighborhoodLocation(ad);
       let hasRegion = adStates.length > 0 || neighborhoodLoc !== null;
       
-      // If neighborhood found, add its state to adStates
       if (neighborhoodLoc) {
         const state = inferState(neighborhoodLoc.query);
         if (state && !adStates.includes(state)) adStates.push(state);
@@ -792,7 +826,7 @@
         rule: "default_add"
       };
 
-      // ---- EWS Flip Rule: generic products with no real location are Add ----
+      // Generic with no location = Add
       if (!hasRegion && cat === "other") {
         res.decision = "Add";
         res.reason = "Generic product with no real location (EWS Rule).";
@@ -802,7 +836,7 @@
 
       // ---- Auto Dealer Association ----
       if (cat === "dealer_assn") {
-        // Tri-State special - check if market is in tri-state region
+        // Tri-State special
         if (triState) {
           const inTriState = isInTriStateRegion(marketState, ad);
           if (inTriState) {
@@ -820,7 +854,7 @@
           }
         }
 
-        // generic dealer assn (no location) => Add (per EWS Rule #8)
+        // Generic dealer assn = Add
         if (!hasRegion && !isRegionalNamedDealerAssn(ad, brand)) {
           res.decision = "Add";
           res.reason = "Generic auto dealer association (EWS Rule #8).";
@@ -861,7 +895,6 @@
           return res;
         }
 
-        // unknown region
         if (unknownRegion && strict && fallbackFlip) {
           res.decision = "Flip";
           res.flipTo = dealerAssnFlipTarget(ad, brand);
@@ -878,7 +911,6 @@
 
       // ---- Local Dealer ----
       if (cat === "local_dealer") {
-        // generic local dealer (EWS Rule #9)
         if (!hasRegion || isGenericLocalDealer(ad, brand)) {
           res.decision = "Add";
           res.reason = "Generic local auto dealer (EWS Rule #9).";
@@ -913,7 +945,7 @@
         return res;
       }
 
-      // ---- Non-auto categories (legal, contractor, furniture, event) ----
+      // ---- Non-auto categories ----
       function nonAuto(target, typeLabel, prefix) {
         if (inRegion) {
           res.decision = "Add";
@@ -963,12 +995,13 @@
       return res;
     }
 
-    // ----- Distance override with flexible threshold (2h 15m - 2h 30m = Add) -----
+    // ============================================================
+    // DISTANCE OVERRIDE WITH FLEXIBLE THRESHOLD
+    // ============================================================
     function applyDistanceOverrideEWS(result, route, airMiles, sourceConfidence) {
       if (!DISTANCE_OVERRIDE_CATEGORIES.has(result.category)) return result;
       if (result.decision !== "Flip") return result;
 
-      // if source is synthetic or none, don't override
       if (sourceConfidence === "synthetic_name_market" || sourceConfidence === "synthetic_name_us" || sourceConfidence === "none") {
         return result;
       }
@@ -977,7 +1010,6 @@
       const withinFlex = route && typeof route.hours === "number" && route.hours <= LOCAL_NEARBY_HOURS_FLEX;
       const withinAir = typeof airMiles === "number" && airMiles <= LOCAL_NEARBY_AIR_MILES;
 
-      // Show warning if near threshold
       const warningEl = document.getElementById("thresholdWarning");
       if (route && typeof route.hours === "number" && route.hours > LOCAL_NEARBY_HOURS && route.hours <= LOCAL_NEARBY_HOURS_FLEX) {
         warningEl.style.display = "block";
@@ -986,7 +1018,6 @@
         warningEl.style.display = "none";
       }
 
-      // Flexible threshold: if within 2.5 hours, keep as Add
       if (withinFlex || withinAir) {
         result.decision = "Add";
         result.flipTo = "";
@@ -1004,15 +1035,22 @@
       return result;
     }
 
-    // ----- Geocoding & routing -----
+    // ============================================================
+    // GEOCODING & ROUTING
+    // ============================================================
     async function geocode(query) {
       if (!query) return null;
       const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=" + encodeURIComponent(query);
-      const res = await fetch(url, { headers: { "Accept": "application/json" } });
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) return null;
-      return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: data[0].display_name };
+      try {
+        const res = await fetch(url, { headers: { "Accept": "application/json" } });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return null;
+        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: data[0].display_name };
+      } catch (e) {
+        console.warn("Geocoding failed for:", query, e);
+        return null;
+      }
     }
 
     async function resolveMarketState(market) {
@@ -1026,7 +1064,7 @@
           const rx = new RegExp("\\b" + escapeRegExp(name).replace(/\s+/g,"\\s+") + "\\b", "i");
           if (rx.test(labelNorm)) return abbr;
         }
-      } catch {}
+      } catch (e) {}
       return "";
     }
 
@@ -1041,37 +1079,110 @@
 
     async function fetchDriveRoute(a, b) {
       const url = "https://router.project-osrm.org/route/v1/driving/" + a.lon + "," + a.lat + ";" + b.lon + "," + b.lat + "?overview=full&geometries=geojson";
-      const res = await fetch(url);
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (!data.routes || !data.routes.length) return null;
-      const rt = data.routes[0];
-      return { miles: rt.distance / 1609.344, hours: rt.duration / 3600, geometry: rt.geometry };
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data.routes || !data.routes.length) return null;
+        const rt = data.routes[0];
+        return { miles: rt.distance / 1609.344, hours: rt.duration / 3600, geometry: rt.geometry };
+      } catch (e) {
+        console.warn("Route fetch failed:", e);
+        return null;
+      }
     }
 
+    // ============================================================
+    // MAP FUNCTIONS
+    // ============================================================
     function initMap() {
       map = L.map("map").setView([39.5, -98.35], 4);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors" }).addTo(map);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { 
+        attribution: "&copy; OpenStreetMap contributors",
+        maxZoom: 19
+      }).addTo(map);
       mapLayer = L.layerGroup().addTo(map);
     }
 
     function drawMap(sourcePt, marketPt, routeGeo) {
       mapLayer.clearLayers();
-      if (!sourcePt && !marketPt) { map.setView([39.5, -98.35], 4); return; }
+      
+      if (!sourcePt && !marketPt) { 
+        map.setView([39.5, -98.35], 4);
+        return; 
+      }
+      
       const bounds = [];
-      if (sourcePt) { L.marker([sourcePt.lat, sourcePt.lon]).addTo(mapLayer).bindPopup("Source"); bounds.push([sourcePt.lat, sourcePt.lon]); }
-      if (marketPt) { L.marker([marketPt.lat, marketPt.lon]).addTo(mapLayer).bindPopup("Market"); bounds.push([marketPt.lat, marketPt.lon]); }
-      if (routeGeo && routeGeo.coordinates) {
+      
+      // Source marker - Blue
+      if (sourcePt) { 
+        const marker = L.marker([sourcePt.lat, sourcePt.lon], {
+          icon: L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: #1d62ff; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 12px rgba(29,98,255,0.5);"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          })
+        }).addTo(mapLayer);
+        marker.bindPopup(`<b>📍 Source (Ad)</b><br>${sourcePt.label || "Ad Location"}`);
+        bounds.push([sourcePt.lat, sourcePt.lon]);
+      }
+
+      // Market marker - Red
+      if (marketPt) { 
+        const marker = L.marker([marketPt.lat, marketPt.lon], {
+          icon: L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: #c23a2e; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 12px rgba(194,58,46,0.5);"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          })
+        }).addTo(mapLayer);
+        marker.bindPopup(`<b>📍 Market</b><br>${marketPt.label || "Market Location"}`);
+        bounds.push([marketPt.lat, marketPt.lon]);
+      }
+
+      // Draw route or straight line
+      if (routeGeo && routeGeo.coordinates && routeGeo.coordinates.length > 0) {
         const latlngs = routeGeo.coordinates.map(c => [c[1], c[0]]);
-        L.polyline(latlngs, { color: "#1d62ff", weight: 4, opacity: 0.85 }).addTo(mapLayer);
+        L.polyline(latlngs, { 
+          color: "#1d62ff", 
+          weight: 4, 
+          opacity: 0.85
+        }).addTo(mapLayer);
         latlngs.forEach(p => bounds.push(p));
       } else if (sourcePt && marketPt) {
-        L.polyline([[sourcePt.lat, sourcePt.lon], [marketPt.lat, marketPt.lon]], { color: "#1d62ff", weight: 3, dashArray: "6,8", opacity: 0.85 }).addTo(mapLayer);
+        // Straight line (air distance)
+        L.polyline([[sourcePt.lat, sourcePt.lon], [marketPt.lat, marketPt.lon]], {
+          color: "#1d62ff",
+          weight: 2,
+          dashArray: "6,8",
+          opacity: 0.6
+        }).addTo(mapLayer);
+        
+        // Distance label
+        const dist = haversineMiles(sourcePt, marketPt);
+        const midLat = (sourcePt.lat + marketPt.lat) / 2;
+        const midLon = (sourcePt.lon + marketPt.lon) / 2;
+        L.marker([midLat, midLon], {
+          icon: L.divIcon({
+            className: 'distance-label',
+            html: `<div style="background: rgba(255,255,255,0.92); padding: 3px 10px; border-radius: 14px; font-size: 12px; font-weight: 600; color: #e67e22; border: 1px solid #e67e22; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">${dist.toFixed(0)} mi (air)</div>`,
+            iconSize: [90, 24],
+            iconAnchor: [45, 12]
+          })
+        }).addTo(mapLayer);
       }
-      if (bounds.length === 1) map.setView(bounds[0], 7);
-      else map.fitBounds(bounds, { padding: [28, 28] });
+
+      // Fit bounds with padding
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [60, 60] });
+      }
     }
 
+    // ============================================================
+    // UI FUNCTIONS
+    // ============================================================
     function setDecision(result) {
       const d = document.getElementById("decision");
       d.textContent = result.decision;
@@ -1083,19 +1194,28 @@
       setText("category", result.category || "-");
     }
 
-    // ----- Main check -----
+    // ============================================================
+    // MAIN CHECK FUNCTION
+    // ============================================================
     async function runCheck() {
       const btn = document.getElementById("checkBtn");
       btn.disabled = true;
-      // Hide warning initially
       document.getElementById("thresholdWarning").style.display = "none";
       
       try {
         const left = document.getElementById("adInput").value;
         const rightMarket = document.getElementById("marketInput").value;
         const parsed = parseLeftAndRight(left, rightMarket);
-        if (!parsed.ad) { alert("Please enter ad/account text on the left."); return; }
-        if (!parsed.market) { alert("Please enter market on the right (or include 'in <market>' in left text)."); return; }
+        
+        if (!parsed.ad) { 
+          alert("Please enter ad/account text on the left."); 
+          return; 
+        }
+        if (!parsed.market) { 
+          alert("Please enter market on the right (or include 'in <market>' in left text)."); 
+          return; 
+        }
+        
         document.getElementById("adInput").value = parsed.ad;
         document.getElementById("marketInput").value = parsed.market;
 
@@ -1120,9 +1240,11 @@
         setText("driveDist", "Calculating...");
 
         let sourcePt = null, marketPt = null, route = null, airMiles = null;
+        
         try {
           marketPt = await geocode(marketAnchor);
           sourcePt = sourceAnchor ? await geocode(sourceAnchor) : null;
+          
           if (sourcePt && marketPt) {
             airMiles = haversineMiles(sourcePt, marketPt);
             setText("airDist", airMiles.toFixed(0) + " mi");
@@ -1136,25 +1258,32 @@
             setText("airDist", "Not available");
             setText("driveDist", "Not available");
           }
-        } catch {
-          setText("airDist", "Not available");
-          setText("driveDist", "Not available");
+        } catch (e) {
+          console.error("Geocoding error:", e);
+          setText("airDist", "Error");
+          setText("driveDist", "Error");
         }
 
-        // Apply EWS distance override with flexible threshold
         result = applyDistanceOverrideEWS(result, route, airMiles, sourceConfidence);
         setDecision(result);
-
         drawMap(sourcePt, marketPt, route ? route.geometry : null);
+        
+      } catch (e) {
+        console.error("Error:", e);
+        alert("An error occurred. Please try again.");
       } finally {
         btn.disabled = false;
       }
     }
 
-    // ----- init -----
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
     initMap();
     document.getElementById("checkBtn").addEventListener("click", runCheck);
-    runCheck();
+    
+    // Run initial check after page loads with delay for map to render
+    setTimeout(runCheck, 800);
   </script>
 </body>
 </html>
