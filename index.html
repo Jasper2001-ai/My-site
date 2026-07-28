@@ -1,17 +1,10 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Add / Flip Market Checker – EWS Compliant</title>
-
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add / Flip Market Checker</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <style>
     :root {
       --bg: #f4f7fc;
@@ -22,11 +15,10 @@
       --blue: #1d62ff;
       --green: #0f8a4d;
       --red: #c23a2e;
-      --orange: #e67e22;
     }
-
+ 
     * { box-sizing: border-box; }
-
+ 
     body {
       margin: 0;
       font-family: "Segoe UI", Tahoma, sans-serif;
@@ -36,13 +28,13 @@
         radial-gradient(900px 420px at 92% -22%, #eaf4ff 0, transparent 60%),
         var(--bg);
     }
-
+ 
     .wrap {
-      max-width: 1280px;
+      max-width: 1260px;
       margin: 20px auto;
       padding: 0 14px 20px;
     }
-
+ 
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -50,35 +42,35 @@
       box-shadow: 0 12px 28px rgba(18, 40, 80, 0.08);
       padding: 14px;
     }
-
+ 
     h1 {
       margin: 2px 0 8px;
       font-size: 24px;
     }
-
+ 
     .sub {
       margin: 0 0 12px;
       color: var(--muted);
       font-size: 13px;
     }
-
+ 
     .grid {
       display: grid;
       grid-template-columns: 1fr 380px;
       gap: 12px;
     }
-
+ 
     @media (max-width: 980px) {
       .grid { grid-template-columns: 1fr; }
     }
-
+ 
     label {
       display: block;
       margin-bottom: 6px;
       font-size: 12px;
       color: var(--muted);
     }
-
+ 
     textarea, input, select {
       width: 100%;
       border: 1px solid var(--line);
@@ -88,20 +80,20 @@
       outline: none;
       background: #fff;
     }
-
+ 
     textarea {
       min-height: 170px;
       resize: vertical;
       line-height: 1.35;
     }
-
+ 
     .side-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin-top: 8px;
     }
-
+ 
     .policy {
       margin-top: 10px;
       border: 1px solid var(--line);
@@ -111,13 +103,13 @@
       font-size: 12px;
       color: var(--muted);
     }
-
+ 
     .center-row {
       display: flex;
       justify-content: center;
       margin-top: 12px;
     }
-
+ 
     button {
       border: 1px solid var(--blue);
       background: var(--blue);
@@ -128,30 +120,30 @@
       font-weight: 600;
       cursor: pointer;
     }
-
+ 
     button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
-
+ 
     .result-grid {
       margin-top: 12px;
       display: grid;
       grid-template-columns: repeat(5, minmax(140px, 1fr));
       gap: 10px;
     }
-
+ 
     @media (max-width: 980px) {
       .result-grid { grid-template-columns: 1fr 1fr; }
     }
-
+ 
     .box {
       border: 1px solid var(--line);
       border-radius: 10px;
       background: #fbfdff;
       padding: 10px;
     }
-
+ 
     .k {
       font-size: 11px;
       color: var(--muted);
@@ -159,227 +151,113 @@
       letter-spacing: 0.4px;
       margin-bottom: 5px;
     }
-
+ 
     .v {
       font-size: 14px;
       font-weight: 600;
       word-break: break-word;
     }
-
+ 
     .add { color: var(--green); }
     .flip { color: var(--red); }
-    .orange { color: var(--orange); }
-
+ 
     #map {
       margin-top: 12px;
       height: 390px;
       border: 1px solid var(--line);
       border-radius: 12px;
       overflow: hidden;
-      background: #f0f4f8;
     }
-
+ 
     .note {
       margin-top: 8px;
       color: var(--muted);
       font-size: 12px;
     }
-
-    .ew-badge {
-      background: #eef5ff;
-      border-radius: 20px;
-      padding: 6px 14px;
-      display: inline-block;
-      font-size: 13px;
-      margin-top: 6px;
-    }
-
-    .threshold-note {
-      margin-top: 6px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      background: #fff8e1;
-      border: 1px solid #ffe082;
-      color: #795548;
-    }
-
-    .legend {
-      display: flex;
-      gap: 16px;
-      margin-top: 6px;
-      font-size: 12px;
-      flex-wrap: wrap;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .legend-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,0,0,0.2);
-    }
-    .legend-dot.blue { background: #1d62ff; }
-    .legend-dot.red { background: #c23a2e; }
-    .legend-line {
-      width: 24px;
-      height: 3px;
-      background: #1d62ff;
-      border-radius: 2px;
-    }
-    .legend-line.dash {
-      background: transparent;
-      border-top: 3px dashed #1d62ff;
-    }
   </style>
-</head>
-<body>
+ </head>
+ <body>
   <div class="wrap">
-    <div class="panel">
-      <h1>Add / Flip Checker <span class="ew-badge">EWS Compliant</span></h1>
-      <p class="sub">
-        Left: ad/account text. Right: market. Uses driving distance + category rules.
-        <br><strong>Map shows route from Source to Market.</strong>
-      </p>
-
-      <div class="grid">
-        <div>
-          <label for="adInput">Ad / Account Text</label>
-          <textarea id="adInput">tri state honda dealer assn in chicago il</textarea>
-        </div>
-
-        <div>
-          <label for="marketInput">Market (optional if included in left input)</label>
-          <input id="marketInput" value="" />
-
-          <div class="side-grid">
-            <div>
-              <label for="modeSelect">Mode</label>
-              <select id="modeSelect">
-                <option value="strict" selected>Strict</option>
-                <option value="lenient">Lenient</option>
-              </select>
-            </div>
-            <div>
-              <label for="fallbackSelect">Unknown Fallback</label>
-              <select id="fallbackSelect">
-                <option value="add" selected>Add</option>
-                <option value="flip">Flip</option>
-              </select>
-            </div>
-            <div>
-              <label for="regionalPolicy">Regional Assn Policy</label>
-              <select id="regionalPolicy">
-                <option value="always_flip" selected>Always Flip</option>
-                <option value="out_region_only">Out-Region Only</option>
-              </select>
-            </div>
-            <div>
-              <label for="thresholdSelect">Threshold</label>
-              <select id="thresholdSelect">
-                <option value="strict">Strict (2h)</option>
-                <option value="flexible" selected>Flexible (2.5h)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="policy">
-            <strong>EWS Flip Rule:</strong> Generic = Add. Within 2h drive = Add. &gt;2h = Flip.
-            <br><br>
-            <strong>Fixed:</strong> Tri‑State detection now matches "tri state" and "tri‑state".<br>
-            <strong>Web search</strong> simulated for law firms/contractors with condition.<br>
-            <strong>Personal Appearance</strong> → Add.<br>
-            <strong>Market‑specific lawyer</strong> flip target.
-          </div>
-        </div>
+   <div class="panel">
+    <h1>Add / Flip Checker</h1>
+    <p class="sub">Left: ad/account text. Right: market. Click check for decision, flip target, and map distance.</p>
+    <div class="grid">
+     <div>
+      <label for="adInput">Ad / Account Text</label> <textarea id="adInput">Texas Chevrolet Dealer Assn Silverado | Domestic Auto Dealer Assn in beaumont tx add or flip</textarea>
+     </div>
+     <div>
+      <label for="marketInput">Market (optional if included in left input)</label> <input id="marketInput" value="">
+      <div class="side-grid">
+       <div>
+        <label for="modeSelect">Mode</label> <select id="modeSelect"> <option value="strict" selected>Strict</option> <option value="lenient">Lenient</option> </select>
+       </div>
+       <div>
+        <label for="fallbackSelect">Unknown Fallback</label> <select id="fallbackSelect"> <option value="add" selected>Add</option> <option value="flip">Flip</option> </select>
+       </div>
+       <div>
+        <label for="regionalPolicy">Regional Assn Policy</label> <select id="regionalPolicy"> <option value="always_flip" selected>Always Flip</option> <option value="out_region_only">Out-Region Only</option> </select>
+       </div>
       </div>
-
-      <div class="center-row">
-        <button id="checkBtn">Check Add or Flip</button>
+      <div class="policy">
+       Distance override is used only for <b>local dealer</b> and only when source anchor confidence is high.
       </div>
-
-      <div class="result-grid">
-        <div class="box">
-          <div class="k">Decision</div>
-          <div class="v" id="decision">-</div>
-        </div>
-        <div class="box">
-          <div class="k">Flip To</div>
-          <div class="v" id="flipTo">-</div>
-        </div>
-        <div class="box">
-          <div class="k">Flip Type</div>
-          <div class="v" id="flipType">-</div>
-        </div>
-        <div class="box">
-          <div class="k">Rule</div>
-          <div class="v" id="ruleUsed">-</div>
-        </div>
-        <div class="box">
-          <div class="k">Reason</div>
-          <div class="v" id="reason">-</div>
-        </div>
-
-        <div class="box">
-          <div class="k">Source Anchor</div>
-          <div class="v" id="sourceAnchor">-</div>
-        </div>
-        <div class="box">
-          <div class="k">Market Anchor</div>
-          <div class="v" id="marketAnchor">-</div>
-        </div>
-        <div class="box">
-          <div class="k">Distance (Air)</div>
-          <div class="v" id="airDist">-</div>
-        </div>
-        <div class="box">
-          <div class="k">Distance (Drive)</div>
-          <div class="v" id="driveDist">-</div>
-        </div>
-        <div class="box">
-          <div class="k">Category</div>
-          <div class="v" id="category">-</div>
-        </div>
-      </div>
-
-      <div id="thresholdWarning" class="threshold-note" style="display:none;">
-        ⚠️ <strong>Near threshold:</strong> Driving time is between 2h 15m - 2h 30m. Keeping as Add (flexible threshold).
-      </div>
-
-      <div id="map"></div>
-
-      <div class="note">
-        <div class="legend">
-          <span class="legend-item"><span class="legend-dot blue"></span> Source (Ad location)</span>
-          <span class="legend-item"><span class="legend-dot red"></span> Market</span>
-          <span class="legend-item"><span class="legend-line"></span> Driving route</span>
-          <span class="legend-item"><span class="legend-line dash"></span> Straight-line (air)</span>
-        </div>
-        <br>
-        Uses OSM + OSRM. <strong>EWS Flip Rule</strong> fully implemented.
-      </div>
+     </div>
     </div>
+    <div class="center-row">
+     <button id="checkBtn">Check Add or Flip</button>
+    </div>
+    <div class="result-grid">
+     <div class="box">
+      <div class="k">Decision</div>
+      <div class="v" id="decision">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Flip To</div>
+      <div class="v" id="flipTo">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Flip Type</div>
+      <div class="v" id="flipType">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Rule</div>
+      <div class="v" id="ruleUsed">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Reason</div>
+      <div class="v" id="reason">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Source Anchor</div>
+      <div class="v" id="sourceAnchor">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Market Anchor</div>
+      <div class="v" id="marketAnchor">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Distance (Air)</div>
+      <div class="v" id="airDist">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Distance (Drive)</div>
+      <div class="v" id="driveDist">-</div>
+     </div>
+     <div class="box">
+      <div class="k">Category</div>
+      <div class="v" id="category">-</div>
+     </div>
+    </div>
+    <div id="map"></div>
+    <div class="note">Uses OpenStreetMap + OSRM public APIs. If route is unavailable, straight-line distance is shown.</div>
+   </div>
   </div>
-
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
-    // ============================================================
-    // CONFIGURATION
-    // ============================================================
-    let LOCAL_NEARBY_AIR_MILES = 150;
-    const DISTANCE_OVERRIDE_CATEGORIES = new Set(["local_dealer", "dealer_assn", "legal", "contractor", "furniture", "event"]);
-
-    // ============================================================
-    // LOCATION DATA (same as before)
-    // ============================================================
+    const LOCAL_NEARBY_HOURS = 2;
+    const LOCAL_NEARBY_AIR_MILES = 120;
+    const DISTANCE_OVERRIDE_CATEGORIES = new Set(["local_dealer"]);
+ 
     const STATE_MAP = {
       alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
       colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
@@ -393,11 +271,13 @@
       vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI", wyoming: "WY",
       dc: "DC", "district of columbia": "DC"
     };
+ 
     const STATE_CODES = Object.values(STATE_MAP);
     const STATE_CODE_SET = new Set(STATE_CODES);
-    const STATE_CODE_END_RX = new RegExp("(?:,|\\s)(" + STATE_CODES.join("|") + ")\\s*$", "i");
-    const STATE_CODE_WORD_RX = new RegExp("\\b(" + STATE_CODES.join("|") + ")\\b", "gi");
-
+    const STATE_CODE_PATTERN = STATE_CODES.join("|");
+    const STATE_CODE_END_RX = new RegExp("(?:,|\\s)(" + STATE_CODE_PATTERN + ")\\s*$", "i");
+    const STATE_CODE_WORD_RX = new RegExp("\\b(" + STATE_CODE_PATTERN + ")\\b", "gi");
+ 
     const STATE_ANCHOR = {
       AL: "Montgomery, AL", AK: "Juneau, AK", AZ: "Phoenix, AZ", AR: "Little Rock, AR",
       CA: "Sacramento, CA", CO: "Denver, CO", CT: "Hartford, CT", DC: "Washington, DC",
@@ -413,13 +293,13 @@
       UT: "Salt Lake City, UT", VA: "Richmond, VA", VT: "Montpelier, VT", WA: "Olympia, WA",
       WI: "Madison, WI", WV: "Charleston, WV", WY: "Cheyenne, WY"
     };
-
+ 
     const BRAND_MAP = {
       audi: "Audi", bmw: "BMW", buick: "Buick", cadillac: "Cadillac", chevrolet: "Chevrolet", chevy: "Chevrolet",
       ford: "Ford", genesis: "Genesis", gmc: "GMC", honda: "Honda", hyundai: "Hyundai", infiniti: "Infiniti",
       jeep: "Jeep", lexus: "Lexus", lincoln: "Lincoln", ram: "Ram", subaru: "Subaru", toyota: "Toyota", volvo: "Volvo"
     };
-
+ 
     const CITY_TO_STATE = {
       "albany": "NY", "alexandria": "LA", "anchorage": "AK", "atlanta": "GA", "austin": "TX",
       "baltimore": "MD", "baton rouge": "LA", "beaumont": "TX", "bend": "OR", "binghamton": "NY",
@@ -434,62 +314,7 @@
       "spokane": "WA", "st louis": "MO", "tampa": "FL", "toledo": "OH", "tucson": "AZ", "tyler": "TX",
       "washington dc": "DC", "wilkes barre": "PA", "wilkes-barre": "PA", "youngstown": "OH"
     };
-
-    // ============================================================
-    // NEIGHBORHOOD MAP
-    // ============================================================
-    const NEIGHBORHOOD_MAP = {
-      "gateway": { city: "St Louis", state: "MO" },
-      "the gateway": { city: "St Louis", state: "MO" },
-      "valley": { city: "Chicago", state: "IL" },
-      "south side": { city: "Chicago", state: "IL" },
-      "north side": { city: "Chicago", state: "IL" },
-      "west side": { city: "Chicago", state: "IL" },
-      "loop": { city: "Chicago", state: "IL" },
-      "gold coast": { city: "Chicago", state: "IL" },
-      "hyde park": { city: "Chicago", state: "IL" },
-      "lincoln park": { city: "Chicago", state: "IL" },
-      "lakeview": { city: "Chicago", state: "IL" },
-      "wrigleyville": { city: "Chicago", state: "IL" },
-      "manhattan": { city: "New York", state: "NY" },
-      "brooklyn": { city: "Brooklyn", state: "NY" },
-      "queens": { city: "Queens", state: "NY" },
-      "bronx": { city: "Bronx", state: "NY" },
-      "staten island": { city: "Staten Island", state: "NY" },
-      "harlem": { city: "New York", state: "NY" },
-      "soho": { city: "New York", state: "NY" },
-      "san fernando valley": { city: "Los Angeles", state: "CA" },
-      "san gabriel valley": { city: "Los Angeles", state: "CA" },
-      "hollywood": { city: "Los Angeles", state: "CA" },
-      "beverly hills": { city: "Beverly Hills", state: "CA" },
-      "santa monica": { city: "Santa Monica", state: "CA" },
-      "dfw": { city: "Dallas", state: "TX" },
-      "metroplex": { city: "Dallas", state: "TX" },
-      "fort worth": { city: "Fort Worth", state: "TX" },
-      "h-town": { city: "Houston", state: "TX" },
-      "atl": { city: "Atlanta", state: "GA" },
-      "miami dade": { city: "Miami", state: "FL" },
-      "sf": { city: "San Francisco", state: "CA" },
-      "bay area": { city: "San Francisco", state: "CA" },
-      "puget sound": { city: "Seattle", state: "WA" },
-      "mile high": { city: "Denver", state: "CO" },
-      "valley of the sun": { city: "Phoenix", state: "AZ" },
-      "motor city": { city: "Detroit", state: "MI" },
-      "burgh": { city: "Pittsburgh", state: "PA" },
-      "philly": { city: "Philadelphia", state: "PA" },
-      "beantown": { city: "Boston", state: "MA" }
-    };
-
-    // ============================================================
-    // TRI-STATE REGIONS
-    // ============================================================
-    const TRI_STATE_REGIONS = {
-      "nyc": { states: ["NY", "NJ", "CT"], anchor: "New York, NY" },
-      "chicago": { states: ["IL", "IN", "WI"], anchor: "Chicago, IL" },
-      "philly": { states: ["PA", "NJ", "DE"], anchor: "Philadelphia, PA" },
-      "dc": { states: ["DC", "MD", "VA"], anchor: "Washington, DC" }
-    };
-
+ 
     const TYPO_MAP = {
       mimai: "miami", maimi: "miami", miamii: "miami",
       chicao: "chicago", chiago: "chicago", chiacgo: "chicago", chicgo: "chicago",
@@ -497,10 +322,9 @@
       mytrle: "myrtle", pittsburg: "pittsburgh", wilkesbarre: "wilkes barre",
       champain: "champaign", champian: "champaign", beumont: "beaumont"
     };
-
+ 
     const REGION_HINTS = [
-      { rx: /\btri-state\b/i, states: [], anchor: "USA", isTriState: true },
-      { rx: /\btri state\b/i, states: [], anchor: "USA", isTriState: true },
+      { rx: /\btri-state\b/i, states: [], anchor: "USA" },
       { rx: /dealers?\s+of\s+the\s+ozarks|\bozarks\b/i, states: ["MO", "AR"], anchor: "Springfield, MO" },
       { rx: /capital area/i, states: ["DC", "MD", "VA"], anchor: "Washington, DC" },
       { rx: /south fl|miami fort lauderdale/i, states: ["FL"], anchor: "Miami, FL" },
@@ -516,15 +340,22 @@
       { rx: /carolinas|coastal carolina|myrtle beach/i, states: ["SC", "NC"], anchor: "Charlotte, NC" },
       { rx: /lake champlain/i, states: ["VT", "NY"], anchor: "Burlington, VT" }
     ];
-
-    let map, mapLayer;
-
-    // ============================================================
-    // HELPER FUNCTIONS
-    // ============================================================
-    function escapeRegExp(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-    function clean(s) { return (s || "").replace(/\s+/g, " ").trim(); }
-    function stripAddOrFlip(s) { return clean((s || "").replace(/\badd\s*or\s*f\w*.*$/i, "")); }
+ 
+    let map;
+    let mapLayer;
+ 
+    function escapeRegExp(s) {
+      return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+ 
+    function clean(s) {
+      return (s || "").replace(/\s+/g, " ").trim();
+    }
+ 
+    function stripAddOrFlip(s) {
+      return clean((s || "").replace(/\badd\s*or\s*f\w*.*$/i, ""));
+    }
+ 
     function normalize(s) {
       let t = clean((s || "").toLowerCase().replace(/[’‘`]/g, "'"));
       for (const [bad, good] of Object.entries(TYPO_MAP)) {
@@ -532,8 +363,11 @@
       }
       return t;
     }
-    function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value || "-"; }
-
+ 
+    function setText(id, value) {
+      document.getElementById(id).textContent = value || "-";
+    }
+ 
     function findBrand(text) {
       const t = normalize(text);
       for (const key of Object.keys(BRAND_MAP)) {
@@ -541,10 +375,9 @@
       }
       return "";
     }
-
+ 
     function detectCategory(ad) {
       const t = normalize(ad);
-      if (/\bpersonal\s+appearance\b/i.test(t)) return "personal_appearance";
       if (/\b(auto\s+dealer\s+assn|dealer\s+assn|dealer\s+association)\b/.test(t)) return "dealer_assn";
       if (/\blocal\s+(auto\s+)?dealer\b/.test(t) || findBrand(ad)) return "local_dealer";
       if (/\b(attorney|attorneys|law firm|law offices|legal services|disability|ssi|personal injury|malpractice|bankruptcy|injury)\b/i.test(t)) return "legal";
@@ -553,256 +386,229 @@
       if (/\b(live event|play|theatre|theater|performing arts|concert|festival|opera|convocations|hall)\b/i.test(t)) return "event";
       return "other";
     }
-
+ 
     function inferState(text) {
       const raw = clean(text);
       const t = normalize(text);
       if (!t) return "";
-
-      for (const [neighborhood, data] of Object.entries(NEIGHBORHOOD_MAP)) {
-        const rx = new RegExp("\\b" + escapeRegExp(neighborhood).replace(/\s+/g, "\\s+") + "\\b", "i");
-        if (rx.test(t)) return data.state;
-      }
-
+ 
       const exactCode = raw.trim().toUpperCase();
       if (STATE_CODE_SET.has(exactCode)) return exactCode;
-
+ 
       const endMatch = raw.match(STATE_CODE_END_RX);
-      if (endMatch) { const c = endMatch[1].toUpperCase(); if (STATE_CODE_SET.has(c)) return c; }
-
-      const names = Object.keys(STATE_MAP).sort((a,b)=>b.length-a.length);
+      if (endMatch) {
+        const c = endMatch[1].toUpperCase();
+        if (STATE_CODE_SET.has(c)) return c;
+      }
+ 
+      const names = Object.keys(STATE_MAP).sort((a, b) => b.length - a.length);
       for (const name of names) {
-        const rx = new RegExp("\\b" + escapeRegExp(name).replace(/\s+/g,"\\s+") + "\\b", "i");
+        const rx = new RegExp("\\b" + escapeRegExp(name).replace(/\s+/g, "\\s+") + "\\b", "i");
         if (rx.test(t)) return STATE_MAP[name];
       }
-
+ 
       for (const [city, st] of Object.entries(CITY_TO_STATE)) {
-        const rx = new RegExp("\\b" + escapeRegExp(city).replace(/\s+/g,"\\s+") + "\\b", "i");
+        const rx = new RegExp("\\b" + escapeRegExp(city).replace(/\s+/g, "\\s+") + "\\b", "i");
         if (rx.test(t)) return st;
       }
-
+ 
       return "";
     }
-
-    function getNeighborhoodLocation(text) {
-      const t = normalize(text);
-      for (const [neighborhood, data] of Object.entries(NEIGHBORHOOD_MAP)) {
-        const rx = new RegExp("\\b" + escapeRegExp(neighborhood).replace(/\s+/g, "\\s+") + "\\b", "i");
-        if (rx.test(t)) {
-          return { query: data.city + ", " + data.state, confidence: "neighborhood" };
-        }
-      }
-      return null;
-    }
-
+ 
     function looksLikeAdCopy(text) {
       return /\b(dealer|assn|association|sales event|local dealer|local auto dealer|contractor|attorney|law|leasing|hybrid|silverado|cherokee|wagoneer|tundra|camry|civic|cr-v|q3|q5|q7|q8)\b/i.test(text);
     }
-
+ 
     function isLikelyMarketFragment(fragment) {
       const f = stripAddOrFlip(fragment);
       if (!f) return false;
       if (/\|/.test(f)) return false;
+ 
       const t = normalize(f);
       const tokenCount = clean(f).split(/\s+/).length;
       if (tokenCount > 8) return false;
       if (looksLikeAdCopy(t)) return false;
+ 
       if (inferState(f)) return true;
       if (/^[a-z][a-z .'-]*(?:,\s*[a-z]{2})?$/i.test(f) && tokenCount <= 3) return true;
       return false;
     }
-
+ 
     function parseLeftAndRight(leftText, rightMarketText) {
       const raw = clean(leftText);
       const rawNoTail = stripAddOrFlip(raw);
       const low = rawNoTail.toLowerCase();
+ 
       const candidates = [];
       let idx = low.lastIndexOf(" in ");
-      while (idx >= 0) { candidates.push({ idx, token: " in " }); idx = low.lastIndexOf(" in ", idx - 1); }
+      while (idx >= 0) {
+        candidates.push({ idx, token: " in " });
+        idx = low.lastIndexOf(" in ", idx - 1);
+      }
+ 
       idx = low.lastIndexOf(" to ");
-      while (idx >= 0) { candidates.push({ idx, token: " to " }); idx = low.lastIndexOf(" to ", idx - 1); }
-      candidates.sort((a,b) => b.idx - a.idx);
+      while (idx >= 0) {
+        candidates.push({ idx, token: " to " });
+        idx = low.lastIndexOf(" to ", idx - 1);
+      }
+ 
+      candidates.sort((a, b) => b.idx - a.idx);
+ 
       let ad = rawNoTail;
       let parsedMarket = "";
+ 
       for (const c of candidates) {
         const leftPart = clean(rawNoTail.slice(0, c.idx));
         const rightPart = stripAddOrFlip(rawNoTail.slice(c.idx + c.token.length));
+ 
         if (!leftPart || leftPart.length < 3) continue;
-        if (isLikelyMarketFragment(rightPart)) { ad = leftPart; parsedMarket = rightPart; break; }
+        if (isLikelyMarketFragment(rightPart)) {
+          ad = leftPart;
+          parsedMarket = rightPart;
+          break;
+        }
       }
+ 
       const rightMarket = stripAddOrFlip(rightMarketText);
       const market = rightMarket || parsedMarket;
+ 
       return { ad: stripAddOrFlip(ad), market };
     }
-
+ 
     function inferAdStates(ad) {
       const raw = clean(ad);
       const t = normalize(ad);
       const set = new Set();
-
-      for (const [neighborhood, data] of Object.entries(NEIGHBORHOOD_MAP)) {
-        const rx = new RegExp("\\b" + escapeRegExp(neighborhood).replace(/\s+/g, "\\s+") + "\\b", "i");
-        if (rx.test(t)) set.add(data.state);
+ 
+      for (const hint of REGION_HINTS) {
+        if (hint.rx.test(t)) hint.states.forEach(s => set.add(s));
       }
-
-      for (const hint of REGION_HINTS) { if (hint.rx.test(t)) hint.states.forEach(s => set.add(s)); }
+ 
       for (const [name, abbr] of Object.entries(STATE_MAP)) {
-        const rx = new RegExp("\\b" + escapeRegExp(name).replace(/\s+/g,"\\s+") + "\\b", "i");
+        const rx = new RegExp("\\b" + escapeRegExp(name).replace(/\s+/g, "\\s+") + "\\b", "i");
         if (rx.test(t)) set.add(abbr);
       }
+ 
       const upperCodeMatches = raw.match(STATE_CODE_WORD_RX);
       if (upperCodeMatches) upperCodeMatches.forEach(c => set.add(c.toUpperCase()));
+ 
       for (const [city, st] of Object.entries(CITY_TO_STATE)) {
-        const rx = new RegExp("\\b" + escapeRegExp(city).replace(/\s+/g,"\\s+") + "\\b", "i");
+        const rx = new RegExp("\\b" + escapeRegExp(city).replace(/\s+/g, "\\s+") + "\\b", "i");
         if (rx.test(t)) set.add(st);
       }
+ 
       return Array.from(set);
     }
-
+ 
     function inferAdAnchor(ad, market, marketStateOverride = "") {
       const t = normalize(ad);
-      const neighborhoodLoc = getNeighborhoodLocation(ad);
-      if (neighborhoodLoc) {
-        return { query: neighborhoodLoc.query, confidence: "neighborhood" };
-      }
-
+ 
       for (const [city, st] of Object.entries(CITY_TO_STATE)) {
-        const rx = new RegExp("\\b" + escapeRegExp(city).replace(/\s+/g,"\\s+") + "\\b", "i");
+        const rx = new RegExp("\\b" + escapeRegExp(city).replace(/\s+/g, "\\s+") + "\\b", "i");
         if (rx.test(t)) return { query: city + ", " + st, confidence: "explicit_city" };
       }
-
+ 
       for (const hint of REGION_HINTS) {
         if (hint.rx.test(t)) return { query: hint.anchor, confidence: "region_hint" };
       }
-
+ 
       const states = inferAdStates(ad);
       if (states.length) {
         return { query: STATE_ANCHOR[states[0]] || (states[0] + ", USA"), confidence: "state_anchor" };
       }
-
+ 
       const nameOnly = clean((ad.split("|")[0] || ""));
       const marketState = marketStateOverride || inferState(market);
       if (nameOnly && marketState) return { query: nameOnly + ", " + marketState, confidence: "synthetic_name_market" };
       if (nameOnly) return { query: nameOnly + ", USA", confidence: "synthetic_name_us" };
       return { query: "", confidence: "none" };
     }
-
+ 
     function inferMarketAnchor(market, marketStateOverride = "") {
       const st = marketStateOverride || inferState(market);
       const m = normalize(market);
       if (!st) return market;
+ 
       const stateName = Object.keys(STATE_MAP).find(k => STATE_MAP[k] === st) || "";
       if (m === st.toLowerCase() || m === stateName) return STATE_ANCHOR[st] || market;
       return market;
     }
-
+ 
     function isGenericLocalDealer(ad, brand) {
       if (!brand) return false;
       const head = normalize((ad || "").split("|")[0] || "");
       const rx = new RegExp("^\\s*" + escapeRegExp(brand.toLowerCase()) + "\\s+local\\s+(?:auto\\s+)?dealer\\s*$", "i");
       return rx.test(head);
     }
-
+ 
     function isRegionalNamedDealerAssn(ad, brand) {
       const full = normalize(ad);
       const head = normalize((ad || "").split("|")[0] || "");
+ 
       if (!/\b(auto\s+dealer\s+assn|dealer\s+assn|dealer\s+association)\b/.test(full)) return false;
+ 
       if (!brand) {
         return !/^\s*(auto\s+)?dealer\s+(assn|association)\b/i.test(head);
       }
-      const genericHead = new RegExp("^\\s*" + escapeRegExp(brand.toLowerCase()) + "\\s+dealer\\s+(assn|association)\\b", "i");
+ 
+      const genericHead = new RegExp(
+        "^\\s*" + escapeRegExp(brand.toLowerCase()) + "\\s+dealer\\s+(assn|association)\\b",
+        "i"
+      );
+ 
       return !genericHead.test(head);
     }
-
+ 
     function extractDealerAssnSuffix(head, brand) {
       const h = clean(head);
       if (!h || !brand) return "";
+ 
       const b = escapeRegExp(brand);
+ 
       let m = h.match(new RegExp("\\b" + b + "\\b\\s+dealer\\s+(?:assn|association)\\s*(.*)$", "i"));
       if (m) return clean(m[1] || "");
+ 
       m = h.match(new RegExp("\\b" + b + "\\b\\s+dealers?\\s+of\\s+the\\s+[A-Za-z0-9&.'-]+\\s*(.*)$", "i"));
       if (m) return clean(m[1] || "");
+ 
       m = h.match(new RegExp("\\b" + b + "\\b\\s+dealers?\\s*(.*)$", "i"));
-      if (m) { const tail = clean(m[1] || ""); if (!/\b(assn|association)\b/i.test(tail)) return tail; }
+      if (m) {
+        const tail = clean(m[1] || "");
+        if (!/\b(assn|association)\b/i.test(tail)) return tail;
+      }
+ 
       m = h.match(/\bdealer\s+(?:assn|association)\s*(.*)$/i);
       if (m) return clean(m[1] || "");
+ 
       return "";
     }
-
+ 
     function dealerAssnFlipTarget(ad, brand) {
       const parts = ad.split("|").map(x => clean(x)).filter(Boolean);
       const head = parts[0] || "";
       if (!brand) return clean(ad);
+ 
       const suffix = extractDealerAssnSuffix(head, brand);
       const newHead = clean(brand + " Dealer Assn" + (suffix ? " " + suffix : ""));
       return [newHead].concat(parts.slice(1)).join(" | ");
     }
-
-    // ----- Tri-State check (fixed) -----
-    function isInTriStateRegion(marketState, adText) {
-      const t = normalize(adText);
-      let triStateKey = null;
-      if (/\bchicago\b/i.test(t) || /\bmidwest\b/i.test(t)) triStateKey = "chicago";
-      else if (/\bnew york\b/i.test(t) || /\bnyc\b/i.test(t)) triStateKey = "nyc";
-      else if (/\bphiladelphia\b/i.test(t) || /\bphilly\b/i.test(t)) triStateKey = "philly";
-      else if (/\bdc\b/i.test(t) || /\bwashington\b/i.test(t)) triStateKey = "dc";
-      if (!triStateKey) {
-        for (const [key, region] of Object.entries(TRI_STATE_REGIONS)) {
-          if (region.states.includes(marketState)) {
-            triStateKey = key;
-            break;
-          }
-        }
-      }
-      if (triStateKey && TRI_STATE_REGIONS[triStateKey]) {
-        return TRI_STATE_REGIONS[triStateKey].states.includes(marketState);
-      }
-      return false;
-    }
-
-    // ----- Simulated Web Search for law firms & contractors -----
-    function simulateWebSearch(ad, market) {
-      const t = normalize(ad);
-      const hasMultiple = /\b(llp|pc|associates|partners|group|inc|corp)\b/i.test(t);
-      const hasLocation = inferState(ad) !== "";
-      const multiple = hasMultiple || !hasLocation;
-      return { used: true, multiple: multiple };
-    }
-
-    // ============================================================
-    // EWS FLIP RULE CLASSIFICATION
-    // ============================================================
-    function classifyEWS(ad, market, config, marketStateOverride = "") {
+ 
+    function classify(ad, market, config, marketStateOverride = "") {
       const brand = findBrand(ad);
       const cat = detectCategory(ad);
       const marketState = marketStateOverride || inferState(market);
       const adStates = inferAdStates(ad);
-      
-      const neighborhoodLoc = getNeighborhoodLocation(ad);
-      let hasRegion = adStates.length > 0 || neighborhoodLoc !== null;
-      
-      if (neighborhoodLoc) {
-        const state = inferState(neighborhoodLoc.query);
-        if (state && !adStates.includes(state)) adStates.push(state);
-      }
-
+ 
+      const hasRegion = adStates.length > 0;
       const inRegion = !!(marketState && hasRegion && adStates.includes(marketState));
       const outRegion = !!(marketState && hasRegion && !adStates.includes(marketState));
       const unknownRegion = !inRegion && !outRegion;
-      const triState = /\b(tri-state|tri state)\b/i.test(ad);
-
+      const triState = /\btri-state\b/i.test(ad);
+ 
       const strict = config.strictMode === "strict";
       const fallbackFlip = config.unknownFallback === "flip";
       const regionalPolicy = config.regionalPolicy || "always_flip";
-
-      let webSearchUsed = false;
-      let webSearchMultiple = false;
-      if (cat === "legal" || cat === "contractor") {
-        const searchResult = simulateWebSearch(ad, market);
-        webSearchUsed = searchResult.used;
-        webSearchMultiple = searchResult.multiple;
-      }
-
+ 
       const res = {
         category: cat,
         brand,
@@ -810,63 +616,24 @@
         flipTo: "",
         flipType: "",
         reason: "In-market or generic.",
-        rule: "default_add",
-        webSearchUsed: webSearchUsed,
-        locationUsed: "No specific location",
-        webSearchMultiple: webSearchMultiple
+        rule: "default_add"
       };
-
-      // ---- Personal Appearance (Rule 7) ----
-      if (cat === "personal_appearance") {
-        res.decision = "Add";
-        res.reason = "Personal Appearance – not flipped (EWS Rule #7).";
-        res.rule = "personal_appearance_add";
-        res.locationUsed = "No specific location";
+ 
+      if (cat === "dealer_assn" && triState) {
+        res.decision = "Flip";
+        res.flipTo = dealerAssnFlipTarget(ad, brand);
+        res.flipType = "Standard";
+        res.reason = "Tri-State dealer association policy.";
+        res.rule = "tri_state_dealer_assn";
         return res;
       }
-
-      // Generic with no location = Add
-      if (!hasRegion && cat === "other") {
-        res.decision = "Add";
-        res.reason = "Generic product with no real location (EWS Rule).";
-        res.rule = "generic_no_location_add";
-        res.locationUsed = "No specific location";
-        return res;
-      }
-
-      // ---- Auto Dealer Association ----
+ 
       if (cat === "dealer_assn") {
-        if (triState) {
-          const inTriState = isInTriStateRegion(marketState, ad);
-          if (inTriState) {
-            res.decision = "Add";
-            res.reason = "Tri-State dealer association in-region (market is in Tri-State area).";
-            res.rule = "tri_state_dealer_assn_in_region_add";
-            res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
-            return res;
-          } else {
-            res.decision = "Flip";
-            res.flipTo = dealerAssnFlipTarget(ad, brand);
-            res.flipType = "Standard";
-            res.reason = "Tri-State dealer association out-of-region.";
-            res.rule = "tri_state_dealer_assn_out_region_flip";
-            res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
-            return res;
-          }
-        }
-
-        if (!hasRegion && !isRegionalNamedDealerAssn(ad, brand)) {
-          res.decision = "Add";
-          res.reason = "Generic auto dealer association (EWS Rule #8).";
-          res.rule = "generic_dealer_assn_add";
-          res.locationUsed = "No specific location";
-          return res;
-        }
-
         const regionalNamed = isRegionalNamedDealerAssn(ad, brand);
-        const shouldFlipRegional = regionalNamed &&
+        const shouldFlipRegional =
+          regionalNamed &&
           (regionalPolicy === "always_flip" || (regionalPolicy === "out_region_only" && outRegion));
-
+ 
         if (shouldFlipRegional) {
           res.decision = "Flip";
           res.flipTo = dealerAssnFlipTarget(ad, brand);
@@ -877,408 +644,331 @@
           res.rule = regionalPolicy === "always_flip"
             ? "regional_dealer_assn_always_flip"
             : "regional_dealer_assn_out_region";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
           return res;
         }
-
+ 
         if (outRegion) {
           res.decision = "Flip";
           res.flipTo = dealerAssnFlipTarget(ad, brand);
           res.flipType = "Standard";
           res.reason = "Dealer association out-of-market.";
           res.rule = "dealer_assn_out_region";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
           return res;
         }
-
+ 
+        if (!hasRegion && !regionalNamed) {
+          res.decision = "Add";
+          res.reason = "Generic dealer association.";
+          res.rule = "generic_dealer_assn_add";
+          return res;
+        }
+ 
         if (inRegion) {
           res.decision = "Add";
           res.reason = "Dealer association region matches market.";
           res.rule = "dealer_assn_in_region_add";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
           return res;
         }
-
+ 
         if (unknownRegion && strict && fallbackFlip) {
           res.decision = "Flip";
           res.flipTo = dealerAssnFlipTarget(ad, brand);
           res.flipType = "Standard";
           res.reason = "Unknown-region strict fallback.";
           res.rule = "dealer_assn_unknown_strict_flip";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
         } else {
           res.decision = "Add";
           res.reason = "Unknown-region fallback add.";
           res.rule = "dealer_assn_unknown_add";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
         }
+ 
         return res;
       }
-
-      // ---- Local Dealer ----
+ 
       if (cat === "local_dealer") {
         if (!hasRegion || isGenericLocalDealer(ad, brand)) {
           res.decision = "Add";
-          res.reason = "Generic local auto dealer (EWS Rule #9).";
+          res.reason = "Generic local dealer (no specific location).";
           res.rule = "generic_local_dealer_add";
-          res.locationUsed = "No specific location";
           return res;
         }
-
+ 
         if (outRegion) {
           res.decision = "Flip";
-          res.flipTo = brand ? (brand + " Local Dealer") : "Unknown Advertiser | Local Auto Dealer";
+          res.flipTo = brand ? (brand + " Local Dealer") : "Unknown Advertiser/Local Dealer";
           res.flipType = "Standard";
           res.reason = "Specific local dealer out-of-market.";
           res.rule = "local_dealer_out_region_flip";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
           return res;
         }
-
+ 
         if (inRegion) {
           res.decision = "Add";
-          res.reason = "Local dealer in-market.";
+          res.reason = "Local dealer appears in-market.";
           res.rule = "local_dealer_in_region_add";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
           return res;
         }
-
+ 
         if (unknownRegion) {
           res.decision = "Flip";
-          res.flipTo = brand ? (brand + " Local Dealer") : "Unknown Advertiser | Local Auto Dealer";
+          res.flipTo = brand ? (brand + " Local Dealer") : "Unknown Advertiser/Local Dealer";
           res.flipType = "Standard";
           res.reason = "Specific local dealer with unknown region.";
           res.rule = "local_dealer_unknown_region_flip";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
           return res;
         }
+ 
         return res;
       }
-
-      // ---- Non-auto categories ----
+ 
       function nonAuto(target, typeLabel, prefix) {
-        if (webSearchMultiple && unknownRegion) {
-          res.decision = "Add";
-          res.reason = "Web search indicates multiple offices – treating as generic (Add).";
-          res.rule = prefix + "_web_search_multiple_add";
-          res.locationUsed = "Multiple locations found";
-          return res;
-        }
         if (inRegion) {
           res.decision = "Add";
           res.reason = "In-market match found.";
           res.rule = prefix + "_in_region_add";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
           return res;
         }
+ 
         if (outRegion) {
           res.decision = "Flip";
-          if (prefix === "legal") {
-            target = `Unknown Advertiser | Lawyer (${market})`;
-          }
           res.flipTo = target;
           res.flipType = typeLabel;
-          res.reason = "Out-of-market (EWS rule).";
+          res.reason = "Out-of-market.";
           res.rule = prefix + "_out_region_flip";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
           return res;
         }
+ 
         if (unknownRegion && fallbackFlip) {
           res.decision = "Flip";
-          if (prefix === "legal") {
-            target = `Unknown Advertiser | Lawyer (${market})`;
-          }
           res.flipTo = target;
           res.flipType = typeLabel;
           res.reason = "Unknown-region fallback flip.";
           res.rule = prefix + "_unknown_flip";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
         } else {
           res.decision = "Add";
           res.reason = "Unknown-region fallback add.";
           res.rule = prefix + "_unknown_add";
-          res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
         }
+ 
         return res;
       }
-
-      if (cat === "legal") return nonAuto("Unknown Advertiser | Lawyer", "90-day", "legal");
-      if (cat === "contractor") return nonAuto("Unknown Advertiser | Contractor", "90-day", "contractor");
-      if (cat === "furniture") return nonAuto("Unknown Advertiser | Furniture Store", "90-day", "furniture");
-      if (cat === "event") return nonAuto("Unknown Advertiser | Local Event/Amusement", "Permanent", "event");
-
-      // ---- Other / unknown ----
+ 
+      if (cat === "legal") return nonAuto("Unknown Advertiser/Lawyer", "90-day", "legal");
+      if (cat === "contractor") return nonAuto("Unknown Advertiser/Contractor", "90-day", "contractor");
+      if (cat === "furniture") return nonAuto("Unknown Advertiser/Furniture Store", "90-day", "furniture");
+      if (cat === "event") return nonAuto("Unknown Advertiser/Local Event/Amusement", "Permanent", "event");
+ 
       if (strict && fallbackFlip) {
         res.decision = "Flip";
         res.flipTo = "Unknown Advertiser";
         res.flipType = "90-day";
         res.reason = "Unknown category strict fallback.";
         res.rule = "unknown_strict_flip";
-        res.locationUsed = marketState ? STATE_ANCHOR[marketState] || market : market;
       } else {
         res.decision = "Add";
         res.reason = "Unknown category fallback add.";
         res.rule = "unknown_add";
-        res.locationUsed = "No specific location";
       }
+ 
       return res;
     }
-
-    // ============================================================
-    // DISTANCE OVERRIDE WITH THRESHOLD SELECTION
-    // ============================================================
-    function applyDistanceOverrideEWS(result, route, airMiles, sourceConfidence, thresholdMode) {
+ 
+    function applyDistanceOverride(result, route, airMiles, sourceConfidence) {
       if (!DISTANCE_OVERRIDE_CATEGORIES.has(result.category)) return result;
       if (result.decision !== "Flip") return result;
-
+ 
       if (sourceConfidence === "synthetic_name_market" || sourceConfidence === "synthetic_name_us" || sourceConfidence === "none") {
         return result;
       }
-
-      const strictHours = 2;
-      const flexHours = 2.5;
-      const maxHours = thresholdMode === "strict" ? strictHours : flexHours;
-
-      const withinDrive = route && typeof route.hours === "number" && route.hours <= maxHours;
+ 
+      const withinDrive = route && typeof route.hours === "number" && route.hours <= LOCAL_NEARBY_HOURS;
       const withinAir = typeof airMiles === "number" && airMiles <= LOCAL_NEARBY_AIR_MILES;
-
-      const warningEl = document.getElementById("thresholdWarning");
-      if (route && typeof route.hours === "number" && route.hours > strictHours && route.hours <= flexHours && thresholdMode === "flexible") {
-        warningEl.style.display = "block";
-        warningEl.innerHTML = `⚠️ <strong>Near threshold:</strong> Driving time is ${route.hours.toFixed(2)} hours (${(route.hours * 60).toFixed(0)} min). Keeping as Add (flexible threshold up to 2h 30m).`;
-      } else {
-        warningEl.style.display = "none";
-      }
-
+ 
       if (withinDrive || withinAir) {
         result.decision = "Add";
         result.flipTo = "";
         result.flipType = "";
-        if (withinDrive && route) {
-          result.reason = `Within ${maxHours} hour ${thresholdMode === "strict" ? "" : "flexible "}driving radius (${route.hours.toFixed(2)} hrs). EWS Rule: Add.`;
-        } else if (withinAir) {
-          result.reason = `Within ${LOCAL_NEARBY_AIR_MILES} mile air distance. EWS Rule: Add.`;
-        } else {
-          result.reason = "Within threshold (EWS Rule).";
-        }
-        result.rule = "distance_override_add_" + thresholdMode;
+        result.reason = "Within ~2-hour market radius.";
+        result.rule = "distance_override_add";
       }
-
+ 
       return result;
     }
-
-    // ============================================================
-    // GEOCODING & ROUTING
-    // ============================================================
+ 
     async function geocode(query) {
       if (!query) return null;
       const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=" + encodeURIComponent(query);
-      try {
-        const res = await fetch(url, { headers: { "Accept": "application/json" } });
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) return null;
-        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: data[0].display_name };
-      } catch (e) {
-        console.warn("Geocoding failed for:", query, e);
-        return null;
-      }
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) return null;
+      return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon),
+        label: data[0].display_name
+      };
     }
-
+ 
     async function resolveMarketState(market) {
       const direct = inferState(market);
       if (direct) return direct;
+ 
       try {
         const pt = await geocode(market);
         if (!pt || !pt.label) return "";
+ 
         const labelNorm = normalize(pt.label);
         for (const [name, abbr] of Object.entries(STATE_MAP)) {
-          const rx = new RegExp("\\b" + escapeRegExp(name).replace(/\s+/g,"\\s+") + "\\b", "i");
+          const rx = new RegExp("\\b" + escapeRegExp(name).replace(/\s+/g, "\\s+") + "\\b", "i");
           if (rx.test(labelNorm)) return abbr;
         }
-      } catch (e) {}
+      } catch {
+      }
+ 
       return "";
     }
-
+ 
     function haversineMiles(a, b) {
       const R = 3958.8;
       const toRad = d => d * Math.PI / 180;
       const dLat = toRad(b.lat - a.lat);
       const dLon = toRad(b.lon - a.lon);
-      const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
-      return R * (2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x)));
+      const x = Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+      return R * (2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)));
     }
-
+ 
     async function fetchDriveRoute(a, b) {
-      const url = "https://router.project-osrm.org/route/v1/driving/" + a.lon + "," + a.lat + ";" + b.lon + "," + b.lat + "?overview=full&geometries=geojson";
-      try {
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (!data.routes || !data.routes.length) return null;
-        const rt = data.routes[0];
-        return { miles: rt.distance / 1609.344, hours: rt.duration / 3600, geometry: rt.geometry };
-      } catch (e) {
-        console.warn("Route fetch failed:", e);
-        return null;
-      }
+      const url = "https://router.project-osrm.org/route/v1/driving/" +
+        a.lon + "," + a.lat + ";" + b.lon + "," + b.lat + "?overview=full&geometries=geojson";
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.routes || !data.routes.length) return null;
+ 
+      const rt = data.routes[0];
+      return {
+        miles: rt.distance / 1609.344,
+        hours: rt.duration / 3600,
+        geometry: rt.geometry
+      };
     }
-
-    // ============================================================
-    // MAP FUNCTIONS
-    // ============================================================
+ 
     function initMap() {
       map = L.map("map").setView([39.5, -98.35], 4);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { 
-        attribution: "&copy; OpenStreetMap contributors",
-        maxZoom: 19
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
       }).addTo(map);
       mapLayer = L.layerGroup().addTo(map);
     }
-
+ 
     function drawMap(sourcePt, marketPt, routeGeo) {
       mapLayer.clearLayers();
-      
-      if (!sourcePt && !marketPt) { 
+ 
+      if (!sourcePt && !marketPt) {
         map.setView([39.5, -98.35], 4);
-        return; 
+        return;
       }
-      
+ 
       const bounds = [];
-      
-      if (sourcePt) { 
-        const marker = L.marker([sourcePt.lat, sourcePt.lon], {
-          icon: L.divIcon({
-            className: 'custom-marker',
-            html: `<div style="background: #1d62ff; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 12px rgba(29,98,255,0.5);"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-          })
-        }).addTo(mapLayer);
-        marker.bindPopup(`<b>📍 Source (Ad)</b><br>${sourcePt.label || "Ad Location"}`);
+ 
+      if (sourcePt) {
+        L.marker([sourcePt.lat, sourcePt.lon]).addTo(mapLayer).bindPopup("Source");
         bounds.push([sourcePt.lat, sourcePt.lon]);
       }
-
-      if (marketPt) { 
-        const marker = L.marker([marketPt.lat, marketPt.lon], {
-          icon: L.divIcon({
-            className: 'custom-marker',
-            html: `<div style="background: #c23a2e; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 12px rgba(194,58,46,0.5);"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-          })
-        }).addTo(mapLayer);
-        marker.bindPopup(`<b>📍 Market</b><br>${marketPt.label || "Market Location"}`);
+ 
+      if (marketPt) {
+        L.marker([marketPt.lat, marketPt.lon]).addTo(mapLayer).bindPopup("Market");
         bounds.push([marketPt.lat, marketPt.lon]);
       }
-
-      if (routeGeo && routeGeo.coordinates && routeGeo.coordinates.length > 0) {
+ 
+      if (routeGeo && routeGeo.coordinates) {
         const latlngs = routeGeo.coordinates.map(c => [c[1], c[0]]);
-        L.polyline(latlngs, { 
-          color: "#1d62ff", 
-          weight: 4, 
-          opacity: 0.85
-        }).addTo(mapLayer);
+        L.polyline(latlngs, { color: "#1d62ff", weight: 4, opacity: 0.85 }).addTo(mapLayer);
         latlngs.forEach(p => bounds.push(p));
       } else if (sourcePt && marketPt) {
         L.polyline([[sourcePt.lat, sourcePt.lon], [marketPt.lat, marketPt.lon]], {
           color: "#1d62ff",
-          weight: 2,
+          weight: 3,
           dashArray: "6,8",
-          opacity: 0.6
-        }).addTo(mapLayer);
-        
-        const dist = haversineMiles(sourcePt, marketPt);
-        const midLat = (sourcePt.lat + marketPt.lat) / 2;
-        const midLon = (sourcePt.lon + marketPt.lon) / 2;
-        L.marker([midLat, midLon], {
-          icon: L.divIcon({
-            className: 'distance-label',
-            html: `<div style="background: rgba(255,255,255,0.92); padding: 3px 10px; border-radius: 14px; font-size: 12px; font-weight: 600; color: #e67e22; border: 1px solid #e67e22; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">${dist.toFixed(0)} mi (air)</div>`,
-            iconSize: [90, 24],
-            iconAnchor: [45, 12]
-          })
+          opacity: 0.85
         }).addTo(mapLayer);
       }
-
-      if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [60, 60] });
-      }
+ 
+      if (bounds.length === 1) map.setView(bounds[0], 7);
+      else map.fitBounds(bounds, { padding: [28, 28] });
     }
-
-    // ============================================================
-    // UI FUNCTIONS
-    // ============================================================
+ 
     function setDecision(result) {
       const d = document.getElementById("decision");
       d.textContent = result.decision;
       d.className = "v " + (result.decision === "Add" ? "add" : "flip");
+ 
       setText("flipTo", result.flipTo || "-");
       setText("flipType", result.flipType || "-");
       setText("reason", result.reason || "-");
       setText("ruleUsed", result.rule || "-");
       setText("category", result.category || "-");
     }
-
-    // ============================================================
-    // MAIN CHECK FUNCTION
-    // ============================================================
+ 
     async function runCheck() {
       const btn = document.getElementById("checkBtn");
       btn.disabled = true;
-      document.getElementById("thresholdWarning").style.display = "none";
-      
+ 
       try {
         const left = document.getElementById("adInput").value;
         const rightMarket = document.getElementById("marketInput").value;
         const parsed = parseLeftAndRight(left, rightMarket);
-        
-        if (!parsed.ad) { 
-          alert("Please enter ad/account text on the left."); 
-          return; 
+ 
+        if (!parsed.ad) {
+          alert("Please enter ad/account text on the left.");
+          return;
         }
-        if (!parsed.market) { 
-          alert("Please enter market on the right (or include 'in <market>' in left text)."); 
-          return; 
+ 
+        if (!parsed.market) {
+          alert("Please enter market on the right (or include 'in <market>' in left text).");
+          return;
         }
-        
+ 
         document.getElementById("adInput").value = parsed.ad;
         document.getElementById("marketInput").value = parsed.market;
-
+ 
         const config = {
           strictMode: document.getElementById("modeSelect").value,
           unknownFallback: document.getElementById("fallbackSelect").value,
           regionalPolicy: document.getElementById("regionalPolicy").value
         };
-
-        const thresholdMode = document.getElementById("thresholdSelect").value;
-
+ 
         const marketStateResolved = await resolveMarketState(parsed.market);
-        let result = classifyEWS(parsed.ad, parsed.market, config, marketStateResolved);
+        let result = classify(parsed.ad, parsed.market, config, marketStateResolved);
         setDecision(result);
-
+ 
         const sourceAnchorObj = inferAdAnchor(parsed.ad, parsed.market, marketStateResolved);
         const sourceAnchor = sourceAnchorObj.query;
         const sourceConfidence = sourceAnchorObj.confidence;
         const marketAnchor = inferMarketAnchor(parsed.market, marketStateResolved);
-
+ 
         setText("sourceAnchor", sourceAnchor || "Not found");
         setText("marketAnchor", marketAnchor || "Not found");
         setText("airDist", "Calculating...");
         setText("driveDist", "Calculating...");
-
-        let sourcePt = null, marketPt = null, route = null, airMiles = null;
-        
+ 
+        let sourcePt = null;
+        let marketPt = null;
+        let route = null;
+        let airMiles = null;
+ 
         try {
           marketPt = await geocode(marketAnchor);
           sourcePt = sourceAnchor ? await geocode(sourceAnchor) : null;
-          
+ 
           if (sourcePt && marketPt) {
             airMiles = haversineMiles(sourcePt, marketPt);
             setText("airDist", airMiles.toFixed(0) + " mi");
+ 
             route = await fetchDriveRoute(sourcePt, marketPt);
             if (route) {
-              setText("driveDist", route.miles.toFixed(0) + " mi (" + route.hours.toFixed(2) + " hrs)");
+              setText("driveDist", route.miles.toFixed(0) + " mi (" + route.hours.toFixed(1) + " hr)");
             } else {
               setText("driveDist", "Route unavailable");
             }
@@ -1286,30 +976,23 @@
             setText("airDist", "Not available");
             setText("driveDist", "Not available");
           }
-        } catch (e) {
-          console.error("Geocoding error:", e);
-          setText("airDist", "Error");
-          setText("driveDist", "Error");
+        } catch {
+          setText("airDist", "Not available");
+          setText("driveDist", "Not available");
         }
-
-        result = applyDistanceOverrideEWS(result, route, airMiles, sourceConfidence, thresholdMode);
+ 
+        result = applyDistanceOverride(result, route, airMiles, sourceConfidence);
         setDecision(result);
+ 
         drawMap(sourcePt, marketPt, route ? route.geometry : null);
-        
-      } catch (e) {
-        console.error("Error:", e);
-        alert("An error occurred. Please try again.");
       } finally {
         btn.disabled = false;
       }
     }
-
-    // ============================================================
-    // INITIALIZATION
-    // ============================================================
+ 
     initMap();
     document.getElementById("checkBtn").addEventListener("click", runCheck);
-    setTimeout(runCheck, 800);
+    runCheck();
   </script>
-</body>
+ </body>
 </html>
