@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add / Flip Market Checker v2 — 99% Accuracy</title>
+    <title>Add / Flip Checker — Online Fallback</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -298,15 +298,15 @@
 <body>
     <div class="app" id="app">
         <div class="app-header">
-            <h1>🔄 Add / Flip Checker <span style="font-weight:400;font-size:16px;color:var(--muted);">v2</span></h1>
+            <h1>🔄 Add / Flip Checker <span style="font-weight:400;font-size:16px;color:var(--muted);">with Online Fallback</span></h1>
             <span class="badge">⭐ 99% accuracy target</span>
         </div>
-        <div class="sub">Rich knowledge base · confidence scoring · dealer &amp; region databases</div>
+        <div class="sub">Static region DB + online geocoding fallback · confidence scoring · dealer DB</div>
 
         <div class="grid-2">
             <div>
                 <label for="adInput">Ad / Account Text</label>
-                <textarea id="adInput">gateways honda dealer assn in st louis</textarea>
+                <textarea id="adInput">wisconsin heartland honda dealer assn in wilmington nc</textarea>
             </div>
             <div>
                 <label for="marketInput">Market (optional)</label>
@@ -328,7 +328,7 @@
                     </div>
                 </div>
                 <div style="margin-top:6px;font-size:12px;color:var(--muted);background:var(--bg);padding:6px 10px;border-radius:8px;">
-                    <span>⚡</span> Dealer DB: 240+ entries · Region DB: 370+ entries
+                    <span>⚡</span> Dealer DB: 240+ entries · Region DB: 370+ entries · Online fallback active
                 </div>
             </div>
         </div>
@@ -421,10 +421,14 @@
         ]);
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  2.  REGION DATABASE  —  370+ named regions, associations, metros
+        //  2.  REGION DATABASE  —  static entries, plus online fallback
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         const REGION_DB = new Map([
-            // ---- ADDED REGION VARIANTS (from user request) ----
+            // ---- NEW: Wisconsin Heartland ----
+            ['wisconsin heartland', { states: ['WI'], anchor: 'Madison, WI', markets: ['Wisconsin'] }],
+            // ---- ADDED: Magic Valley ----
+            ['magic valley', { states: ['ID'], anchor: 'Twin Falls, ID', markets: ['Twin Falls'] }],
+            // ---- ADDED: previous region variants ----
             ['gateways', { states: ['MO'], anchor: 'St Louis, MO', markets: ['St Louis'] }],
             ['greater metropolitan', { states: ['MN'], anchor: 'Minneapolis, MN', markets: ['Minneapolis'] }],
             ['central florida', { states: ['FL'], anchor: 'Orlando, FL', markets: ['Orlando'] }],
@@ -925,7 +929,7 @@
         ]);
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  3.  DEALER DATABASE  —  240+ real dealerships
+        //  3.  DEALER DATABASE  —  240+ real dealerships (unchanged)
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         const DEALER_DB = new Map([
             // ---- St Louis area ----
@@ -1815,8 +1819,10 @@
             return bestMatch;
         }
 
-        function findRegion(text) {
+        // ---------- MODIFIED findRegion with ONLINE FALLBACK ----------
+        async function findRegion(text) {
             const t = normalize(text);
+            // First, search local DB
             let bestMatch = null;
             let bestLen = 0;
             for (const [name, data] of REGION_DB) {
@@ -1828,7 +1834,48 @@
                     }
                 }
             }
-            return bestMatch;
+            if (bestMatch) return bestMatch;
+
+            // Not found locally – try online geocoding
+            try {
+                const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=' +
+                    encodeURIComponent(text);
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return null;
+                const data = await res.json();
+                if (!Array.isArray(data) || data.length === 0) return null;
+
+                const place = data[0];
+                const display = place.display_name || '';
+                let state = '';
+                // Extract state from address components
+                if (place.address) {
+                    if (place.address.state_code) state = place.address.state_code.toUpperCase();
+                    else if (place.address.state) {
+                        const stateName = place.address.state.toLowerCase();
+                        for (const [name, code] of Object.entries(STATE_MAP)) {
+                            if (name === stateName) { state = code; break; }
+                        }
+                    }
+                }
+                // Fallback: regex from display name
+                if (!state) {
+                    const stateMatch = display.match(/\b([A-Z]{2})\b/);
+                    if (stateMatch) state = stateMatch[1];
+                }
+
+                if (state) {
+                    const regionData = {
+                        states: [state],
+                        anchor: place.display_name || text,
+                        markets: [text]
+                    };
+                    return { name: text, ...regionData };
+                }
+            } catch (e) {
+                console.warn('Online region fallback failed:', e);
+            }
+            return null;
         }
 
         function detectCategory(text) {
@@ -1876,9 +1923,9 @@
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  7.  DECISION ENGINE
+        //  7.  DECISION ENGINE  (async because it calls findRegion)
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function decide(adText, marketText, config) {
+        async function decide(adText, marketText, config) {
             const parsed = parseAdMarket(adText);
             const ad = parsed.ad || adText;
             const marketFromAd = parsed.market || '';
@@ -1887,7 +1934,7 @@
             const brand = findBrand(ad);
             const category = detectCategory(ad);
             const dealer = findDealer(ad);
-            const region = findRegion(ad);
+            const region = await findRegion(ad); // <--- ONLINE FALLBACK HERE
             const marketState = inferState(market);
             const adStates = [];
             // Try to infer states from ad
@@ -2350,18 +2397,17 @@
                 document.getElementById('adInput').value = ad;
                 document.getElementById('marketInput').value = market;
 
-                const result = decide(ad, market, config);
+                // await the decision because it may call the online fallback
+                const result = await decide(ad, market, config);
 
                 // Geocode for map
                 const sourceAnchorObj = (() => {
-                    // Try to get a good anchor from the ad
                     if (result.dealer) {
                         return result.dealer.city + ', ' + result.dealer.state;
                     }
                     if (result.region && result.region.anchor) {
                         return result.region.anchor;
                     }
-                    // Try to extract city/state from ad
                     const t = normalize(ad);
                     for (const [city, st] of Object.entries(CITY_TO_STATE)) {
                         if (t.includes(city)) return city + ', ' + st;
@@ -2429,7 +2475,7 @@
         initMap();
         document.getElementById('checkBtn').addEventListener('click', runCheck);
         document.getElementById('resetBtn').addEventListener('click', () => {
-            document.getElementById('adInput').value = 'gateways honda dealer assn in st louis';
+            document.getElementById('adInput').value = 'wisconsin heartland honda dealer assn in wilmington nc';
             document.getElementById('marketInput').value = '';
             runCheck();
         });
